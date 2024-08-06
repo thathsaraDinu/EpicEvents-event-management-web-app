@@ -12,18 +12,17 @@ function CreatePromotion() {
   const [errorPage2, setErrorPage2] = useState(false);
   const apiUrl = getApiUrl();
   const [errorPage3, setErrorPage3] = useState(false);
-    const [errors, setErrors] = useState({
-      bundleItems: "",
-      discountAmount: "",
-      discountPercentage: "",
-      applicableItems: "",
-      qualifyingPurchaseAmount: "",
-      freeGiftItemID: "",
-      startDate: "",
-      endDate: "",
-      description: "",
-    });
-
+  const [errors, setErrors] = useState({
+    bundleItems: "",
+    discountAmount: "",
+    discountPercentage: "",
+    applicableItems: "",
+    qualifyingPurchaseAmount: "",
+    freeGiftItemID: "",
+    startDate: "",
+    endDate: "",
+    description: "",
+  });
 
   const [formData, setFormData] = useState({
     promotionType: "",
@@ -38,6 +37,19 @@ function CreatePromotion() {
     endDate: "",
     description: "",
   });
+  const resetErrors = () => {
+    setErrors({
+      bundleItems: "",
+      discountAmount: "",
+      discountPercentage: "",
+      applicableItems: "",
+      qualifyingPurchaseAmount: "",
+      freeGiftItemID: "",
+      startDate: "",
+      endDate: "",
+      description: "",
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -131,15 +143,14 @@ function CreatePromotion() {
     console.log(formData);
     setErrorPage3(false);
   };
-////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////
   const handleEmpty = (e) => {
     const { name, value } = e.target;
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: value.trim() === "" ? "This field is required" : "",
-
     }));
-    console.log(errors)
+    console.log(errors);
   };
 
   const setNextPage = () => {
@@ -152,7 +163,7 @@ function CreatePromotion() {
           ...prevItems,
           promotionType: method,
         }));
-
+        resetErrors();
         setStep(step + 1);
         setErrorPage1(false);
       }
@@ -176,6 +187,7 @@ function CreatePromotion() {
         formData.description
       ) {
         setStep(step + 1);
+        resetErrors();
         setErrorPage2(false);
       }
 
@@ -185,6 +197,7 @@ function CreatePromotion() {
   };
   const setPreviousPage = () => {
     setStep(step - 1);
+
     setErrorPage1(false);
     setErrorPage2(false);
   };
@@ -386,9 +399,6 @@ function CreatePromotion() {
                       onChange={(e) => {
                         handleChange(e);
                       }}
-                      onBlur={() => {
-                        handleEmpty(e);
-                      }}
                       id="inputField"
                     />
                   </div>
@@ -413,7 +423,9 @@ function CreatePromotion() {
                           }}
                         />
                         {errors.discountPercentage && (
-                          <span>{errors.discountPercentage}</span>
+                          <span className="text-sm text-red-600 font-semibold">
+                            {errors.discountPercentage}
+                          </span>
                         )}
                       </div>
 
@@ -435,12 +447,18 @@ function CreatePromotion() {
                               name={item}
                               required
                             />
+
                             <button
                               type="button"
                               onClick={() => removeItem(index, 1)}
                             >
                               Remove
                             </button>
+                            {errors.applicableItems && (
+                              <span className="text-sm text-red-600 font-semibold">
+                                {errors.applicableItems}
+                              </span>
+                            )}
                           </div>
                         ))}
                         <button type="button" onClick={() => addItem(1)}>
@@ -467,15 +485,21 @@ function CreatePromotion() {
                               onBlur={(e) => {
                                 handleEmpty(e);
                               }}
-                              name={item}
+                              name="bundleItems"
                               required
                             />
+
                             <button
                               type="button"
                               onClick={() => removeItem(index, 2)}
                             >
                               Remove
                             </button>
+                            {errors.bundleItems && (
+                              <span className="text-sm text-red-600 font-semibold">
+                                {errors.bundleItems}
+                              </span>
+                            )}
                           </div>
                         ))}
                         <button
@@ -504,6 +528,11 @@ function CreatePromotion() {
                             handleEmpty(e);
                           }}
                         />
+                        {errors.discountAmount && (
+                          <span className="text-sm text-red-600 font-semibold">
+                            {errors.discountAmount}
+                          </span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -527,6 +556,11 @@ function CreatePromotion() {
                             handleEmpty(e);
                           }}
                         />
+                        {errors.qualifyingPurchaseAmount && (
+                          <span className="text-sm text-red-600 font-semibold">
+                            {errors.qualifyingPurchaseAmount}
+                          </span>
+                        )}
                       </div>
                       <div>
                         <label>Free Gift Item ID</label>
@@ -545,6 +579,11 @@ function CreatePromotion() {
                             handleEmpty(e);
                           }}
                         />
+                        {errors.freeGiftItemID && (
+                          <span className="text-sm text-red-600 font-semibold">
+                            {errors.freeGiftItemID}
+                          </span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -552,6 +591,7 @@ function CreatePromotion() {
                   <div>
                     <label>Description:</label>
                     <textarea
+                      type="text"
                       name="description"
                       className={`border-solid border-2`}
                       ref={(el) => (inputRefs.current["description"] = el)}
@@ -563,6 +603,11 @@ function CreatePromotion() {
                         handleEmpty(e);
                       }}
                     />
+                    {errors.description && (
+                      <span className="text-sm text-red-600 font-semibold">
+                        {errors.description}
+                      </span>
+                    )}
                   </div>
                   {errorPage2 ? (
                     <p className="font-semibold text-red-500 pt-5 text-end">
