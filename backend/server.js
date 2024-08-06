@@ -1,12 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const Event = require("./eventModel");
+const Event = require("./models/eventModel");
 const cors = require("cors");
 const multer = require("multer");
 const uri =
   "mongodb+srv://thathsaradinuwan:Dinuwan@cluster0.67pv9xt.mongodb.net/?retryWrites=true&w=majority";
 const app = express();
-const controller = require("./controller");
+const controller = require("./controllers/controller");
+const promotioncontroller = require("./controllers/promotionController")
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -60,4 +61,8 @@ app.post("/updateEvent/:id", async (req, res) => {
 
 app.get("/getEventById/:id", async (req, res) => {
   controller.getEventsById(req, res);
+});
+
+app.post("/createpromotion", async (req, res) => {
+  promotioncontroller.createPromotion(req, res);
 });

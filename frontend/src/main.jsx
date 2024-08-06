@@ -9,12 +9,17 @@ import "flowbite";
 
 import CreateEvent from './Components/Events/CreateEvent.jsx'
 import UpdateEvents from './Components/Events/UpdateEvent.jsx'
+import CreatePromotion from './Components/Events/CreatePromotion.jsx'
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App></App>,
     errorElement: <ErrorPage></ErrorPage>,
+  },
+  {
+    path: "/promotion",
+    element: <CreatePromotion></CreatePromotion>,
   },
   {
     path: "events",

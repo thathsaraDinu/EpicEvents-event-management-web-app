@@ -1,0 +1,15 @@
+{
+  "name": "epicevents-event-management-app-web-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "start npm run start-frontend & start npm run start-backend",
+    "start-frontend": "npm run dev --prefix frontend",
+    "start-backend": "cd backend && node server.js",
+    "install": "(cd backend && npm i) & (cd ../frontend && npm i)"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

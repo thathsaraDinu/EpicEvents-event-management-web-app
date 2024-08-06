@@ -22,7 +22,8 @@ function App() {
       <MainMenu></MainMenu>
 
       <div
-        className="bg-cover bg-center h-[60vh] w-full sm:h-screen "
+        className="bg-cover bg-center h-[60vh] w-full sm:h-screen"
+        
         style={{
           backgroundImage: "url('/SYUnrOsALSo527oY8elFm-transformed.jpg')",
         }}
@@ -37,7 +38,7 @@ function App() {
               From intimate gatherings to grand celebrations, we handle every
               detail with precision and care
             </div>
-            <div></div>
+            <div ></div>
             <div className="cursor-pointer inline-block sm:mt-8 px-4 py-3 rounded-md bg-blue-700 hover:bg-blue-800 text-white">
               Get Started!
             </div>

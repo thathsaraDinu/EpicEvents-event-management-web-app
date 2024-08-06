@@ -82,7 +82,7 @@ const apiUrl = getApiUrl();
           ref={formRef}
           onSubmit={handleSubmit}
           method="POST"
-          class="lg:w-1/2  p-10  pb-5 md:px-20 xl:mx-10 bg-transparent lg:mt-[6rem] mt-10"
+          class="lg:w-1/2  p-10  pb-5 md:px-20 xl:mx-10 bg-transparent lg:mt-[6rem] "
         >
           <div className="w-full text-center pb-10 text-2xl font-semibold">
             Add an event
