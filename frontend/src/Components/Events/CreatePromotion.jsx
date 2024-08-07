@@ -6,12 +6,14 @@ import getApiUrl from "../getApiUrl";
 
 function CreatePromotion() {
   const [step, setStep] = useState(1);
-  const [method, setMethod] = useState("");
+  const [method, setMethod] = useState(0);
   const [inputValue, setInputValue] = useState(""); // State to store the input value
   const [errorPage1, setErrorPage1] = useState(false);
   const [errorPage2, setErrorPage2] = useState(false);
   const apiUrl = getApiUrl();
   const [errorPage3, setErrorPage3] = useState(false);
+  const [submitted, setSubmitted] = useState(0);
+
   const [errors, setErrors] = useState({
     bundleItems: "",
     discountAmount: "",
@@ -25,7 +27,7 @@ function CreatePromotion() {
   });
 
   const [formData, setFormData] = useState({
-    promotionType: "",
+    promotionType: 0,
     storeName: "",
     bundleItems: [""],
     discountAmount: "",
@@ -61,7 +63,7 @@ function CreatePromotion() {
 
   const resetFields = () => {
     setFormData({
-      promotionType: "",
+      promotionType: 0,
       storeName: "",
       bundleItems: [""],
       discountAmount: "",
@@ -128,27 +130,49 @@ function CreatePromotion() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.startDate || !formData.endDate) {
-      setErrorPage3(true);
-      return;
+    try {
+      console.log(formData);
+      if (!formData.startDate || !formData.endDate) {
+        setErrorPage3(true);
+        console.log("add date");
+        return;
+      }
+      setErrorPage3(false);
+      // Add your form submission logic here
+      const response = await fetch(apiUrl + "createpromotion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      setStep(1);
+      resetFields();
+      if (response.status == 200) {
+        console.log("forrrrm", formData, response);
+
+        setSubmitted(1);
+      } else if (response.status == 400) {
+        setSubmitted(5);
+      } else {
+        setSubmitted(6);
+      }
+    } catch (error) {
+      setStep(1);
+      resetFields();
+      setErrorPage3(false);
+      setSubmitted(2);
     }
-    // Add your form submission logic here
-    await fetch(apiUrl + "createpromotion", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-    console.log(formData);
-    setErrorPage3(false);
   };
   ////////////////////////////////////////////////////////////////
   const handleEmpty = (e) => {
     const { name, value } = e.target;
     setErrors((prevErrors) => ({
       ...prevErrors,
-      [name]: value.trim() === "" ? "This field is required" : "",
+      [name]: value.trim() === "" ? "required" : "",
     }));
     console.log(errors);
   };
@@ -342,7 +366,7 @@ function CreatePromotion() {
               {step == 1 && (
                 <div id="firstpart" className="px-6 py-5 sm:px-10">
                   <div>
-                    <lable className="text-xl">label 1</lable>
+                    <label className="text-xl">label 1</label>
                   </div>
                   <div className="mt-5 flex pt-5 items-center flex-col gap-2">
                     <label>Select a Promotion type</label>
@@ -359,7 +383,7 @@ function CreatePromotion() {
                       value={method}
                       onChange={(e) => {
                         resetFields();
-                        setMethod(e.target.value);
+                        setMethod(Number(e.target.value));
 
                         console.log(e.target.value);
                       }}
@@ -374,6 +398,25 @@ function CreatePromotion() {
                       <option value={3}>Free Gift Promotion</option>
                     </select>
                   </div>
+                  {submitted === 1 ? (
+                    <span className="text-lg text-green-600 py-5 ">
+                      Promotion Creation successfull!{" "}
+                    </span>
+                  ) : submitted === 2 ? (
+                    <span className="text-lg text-red-600 py-5 ">
+                      Promotion Creation Failed!{" "}
+                    </span>
+                  ) : submitted === 5 ? (
+                    <span className="text-lg text-red-600 py-5 ">
+                      Promotion Creation Failed! Please Enter Required Fields{" "}
+                    </span>
+                  ) : submitted === 6 ? (
+                    <span className="text-lg text-red-600 py-5 ">
+                      Promotion Creation Failed! Server Error{" "}
+                    </span>
+                  ) : (
+                    ""
+                  )}
 
                   <div className="w-full  text-end pr-10">
                     <button
@@ -389,6 +432,17 @@ function CreatePromotion() {
               {step == 2 && (
                 <div>
                   <div>
+                    {method === 1 ? (
+                      <span>Discount By Percentage</span>
+                    ) : method === 2 ? (
+                      <span>Bundle Deals</span>
+                    ) : method === 3 ? (
+                      <span>Free Gift Item</span>
+                    ) : (
+                      `No Type Selected ${method}`
+                    )}
+                  </div>
+                  <div>
                     <label>Store Name:</label>
                     <input
                       className={`border-solid border-2`}
@@ -403,7 +457,7 @@ function CreatePromotion() {
                     />
                   </div>
 
-                  {method == 1 && (
+                  {method === 1 && (
                     <div>
                       <div>
                         <label>Discount Percentage:</label>
@@ -468,7 +522,7 @@ function CreatePromotion() {
                     </div>
                   )}
 
-                  {formData.promotionType == 2 && (
+                  {method === 2 && (
                     <div>
                       <div>
                         <label>Bundle Items:</label>
@@ -537,7 +591,7 @@ function CreatePromotion() {
                     </div>
                   )}
 
-                  {formData.promotionType == 3 && (
+                  {method === 3 && (
                     <div>
                       <div>
                         <label>Qualifying Purchase Amount</label>
@@ -637,6 +691,17 @@ function CreatePromotion() {
               )}
               {step == 3 && (
                 <div>
+                  <div>
+                    {method === 1 ? (
+                      <span>Discount By Percentage</span>
+                    ) : method === 2 ? (
+                      <span>Bundle Deals</span>
+                    ) : method === 3 ? (
+                      <span>Free Gift Item</span>
+                    ) : (
+                      "No Type Selected"
+                    )}
+                  </div>
                   <div>
                     <label>Start Date:</label>
                     <input
