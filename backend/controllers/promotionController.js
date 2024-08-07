@@ -29,6 +29,8 @@ const createPromotion = async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
+   
+
     if (now >= start && now <= end) {
       isActive = true;
     } else {
@@ -49,8 +51,8 @@ const createPromotion = async (req, res) => {
         storeName,
         discountPercentage,
         applicableItems,
-        startDate,
-        endDate,
+        startDate: start,
+        endDate: end,
         description,
         isActive,
       });
@@ -66,8 +68,8 @@ const createPromotion = async (req, res) => {
         storeName,
         bundleItems,
         discountAmount,
-        startDate,
-        endDate,
+        startDate: start,
+        endDate: end,
         description,
         isActive,
       });
@@ -79,12 +81,12 @@ const createPromotion = async (req, res) => {
           .json({ message: "Please enter FreeGift required fields" });
 
       newPromotion = new freeGift({
-        promotionType: "Free Gift",
+        promotionType: "Free Gift with Purchase",
         storeName,
         qualifyingPurchaseAmount,
         freeGiftItemID,
-        startDate,
-        endDate,
+        startDate: start,
+        endDate: end,
         description,
         isActive,
       });
@@ -98,7 +100,7 @@ const createPromotion = async (req, res) => {
 
     return res.status(200).json({ savedprom: savedPromotion });
   } catch (error) {
-    res.status(500).json({ message: "failed, internal error" });
+    res.status(500).json({err: error, message: "failed, internal error" });
   }
 };
 

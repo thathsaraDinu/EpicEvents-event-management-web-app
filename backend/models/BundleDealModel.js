@@ -10,18 +10,11 @@ const BundleDealSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  bundleItems: [
-    {
-      itemID: {
-        type: String,
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
-      },
-    },
-  ],
+  bundleItems: {
+    type: [String],
+    required: true,
+  },
+
   discountAmount: {
     type: Number,
     required: true,

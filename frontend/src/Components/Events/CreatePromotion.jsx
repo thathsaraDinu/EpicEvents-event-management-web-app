@@ -12,7 +12,7 @@ function CreatePromotion() {
   const [errorPage2, setErrorPage2] = useState(false);
   const apiUrl = getApiUrl();
   const [errorPage3, setErrorPage3] = useState(false);
-  const [submitted, setSubmitted] = useState(0);
+  const [submitted, setSubmitted] = useState(null);
 
   const [errors, setErrors] = useState({
     bundleItems: "",
@@ -151,6 +151,7 @@ function CreatePromotion() {
       }
       setStep(1);
       resetFields();
+      setMethod(0);
       if (response.status == 200) {
         console.log("forrrrm", formData, response);
 
@@ -158,11 +159,12 @@ function CreatePromotion() {
       } else if (response.status == 400) {
         setSubmitted(5);
       } else {
-        setSubmitted(6);
+        setSubmitted(2);
       }
     } catch (error) {
       setStep(1);
       resetFields();
+      setMethod(0);
       setErrorPage3(false);
       setSubmitted(2);
     }
@@ -190,6 +192,7 @@ function CreatePromotion() {
         resetErrors();
         setStep(step + 1);
         setErrorPage1(false);
+        setSubmitted(null)
       }
     } else {
       const filteredBundle = formData.bundleItems.filter(
@@ -213,10 +216,10 @@ function CreatePromotion() {
         setStep(step + 1);
         resetErrors();
         setErrorPage2(false);
+      } else {
+        setErrorPage2(true);
+        return;
       }
-
-      setErrorPage2(true);
-      return;
     }
   };
   const setPreviousPage = () => {
@@ -231,21 +234,25 @@ function CreatePromotion() {
       <MainMenu></MainMenu>
       <div className="sm:px-20 px-10">
         <div className=" pt-10">
-          <div className="text-3xl pt-10 font-semibold ">topic 1</div>
+          <div className="text-3xl font-semibold ">topic 1</div>
           <div className="text-xl pt-5 font-medium ">topic 2!</div>
         </div>
-        <div className="flex justify-center">
-          <div className="mt-10 w-[120vh] rounded-xl px-5 sm:px-10 py-20 pb-10 h-auto border-solid border-black border-2">
+        <div className="flex justify-center mb-10 sm:mb-20">
+          <div className="mt-10 w-[120vh] rounded-xl  sm:px-10 py-20 pb-10 h-auto border-solid border-black border-2">
             <form onSubmit={handleSubmit} className="flex flex-col gap-6 ">
               <div className="w-full px-5 sm:px-10 md:px-20 h-[4rem] lg:h-[8rem] py-">
                 <div className="relative flex items-center justify-between w-full">
                   <div className="absolute left-0 top-2/4 h-0.5 w-full -translate-y-2/4 bg-gray-300"></div>
-                  <div className="absolute left-0 top-2/4 h-0.5 w-full -translate-y-2/4 bg-gray-900 transition-all duration-500"></div>
+                  <div
+                    className={`absolute left-0 top-2/4 h-0.5 ${
+                      step == 1 ? "w-0" : step == 2 ? "w-1/2" : "w-full"
+                    }  -translate-y-2/4 bg-green-500 transition-all duration-500`}
+                  ></div>
                   <div
                     className={`relative z-10 grid w-10 h-10 font-bold transition-all duration-300  ${
                       step == 1
                         ? "text-white  bg-gray-900"
-                        : "text-white bg-gray-300"
+                        : "text-white bg-green-500"
                     } rounded-full place-items-center`}
                   >
                     <svg
@@ -267,7 +274,7 @@ function CreatePromotion() {
                       <h6
                         id="steptext"
                         className={`block font-sans text-base antialiased font-semibold leading-relaxed tracking-normal ${
-                          step == 1 ? "text-black" : "text-gray-300"
+                          step == 1 ? "text-black" : "text-green-500"
                         }`}
                       >
                         Step 1
@@ -286,7 +293,9 @@ function CreatePromotion() {
                     className={`relative z-10 grid w-10 h-10 font-bold transition-all duration-300  ${
                       step == 2
                         ? "text-white  bg-gray-900"
-                        : "text-white bg-gray-300"
+                        : step == 3
+                        ? "text-white bg-green-500"
+                        : "text-white  bg-gray-300"
                     } rounded-full place-items-center`}
                   >
                     <svg
@@ -307,14 +316,22 @@ function CreatePromotion() {
                     <div className="absolute bottom-[3.5rem] lg:-bottom-[4.5rem] w-max text-center">
                       <h6
                         className={`block font-sans text-base antialiased font-semibold leading-relaxed tracking-normal ${
-                          step == 2 ? "text-black" : "text-gray-300"
+                          step == 2
+                            ? "text-gray-900 "
+                            : step == 3
+                            ? "text-green-500"
+                            : "text-gray-300 "
                         }`}
                       >
                         Step 2
                       </h6>
                       <p
                         className={`lg:block hidden font-sans text-base antialiased font-normal leading-relaxed  ${
-                          step == 2 ? "text-black" : "text-gray-300"
+                          step == 2
+                            ? "text-gray-900 "
+                            : step == 3
+                            ? "text-green-500"
+                            : "text-gray-300 "
                         }`}
                       >
                         Fill Out Information
@@ -364,11 +381,11 @@ function CreatePromotion() {
               </div>
 
               {step == 1 && (
-                <div id="firstpart" className="px-6 py-5 sm:px-10">
-                  <div>
-                    <label className="text-xl">label 1</label>
-                  </div>
-                  <div className="mt-5 flex pt-5 items-center flex-col gap-2">
+                <div
+                  id="firstpart"
+                  className="transition-all duration-500 px-3 mb-6 sm:px-10"
+                >
+                  <div className="mt-5 mb-10 flex pt-5 items-center flex-col gap-2">
                     <label>Select a Promotion type</label>
                     {errorPage1 ? (
                       <p className="font-semibold text-red-500 pt-2 text-end">
@@ -398,31 +415,78 @@ function CreatePromotion() {
                       <option value={3}>Free Gift Promotion</option>
                     </select>
                   </div>
-                  {submitted === 1 ? (
-                    <span className="text-lg text-green-600 py-5 ">
-                      Promotion Creation successfull!{" "}
-                    </span>
-                  ) : submitted === 2 ? (
-                    <span className="text-lg text-red-600 py-5 ">
-                      Promotion Creation Failed!{" "}
-                    </span>
-                  ) : submitted === 5 ? (
-                    <span className="text-lg text-red-600 py-5 ">
-                      Promotion Creation Failed! Please Enter Required Fields{" "}
-                    </span>
-                  ) : submitted === 6 ? (
-                    <span className="text-lg text-red-600 py-5 ">
-                      Promotion Creation Failed! Server Error{" "}
-                    </span>
-                  ) : (
-                    ""
-                  )}
 
-                  <div className="w-full  text-end pr-10">
+                  <div
+                    className={`w-full gap-5 sm:gap-10 flex items-center justify-center ${
+                      submitted ? " sm:justify-between" : "sm:justify-end"
+                    } text-end `}
+                  >
+                    {submitted ? (
+                      <div
+                        id="alert-border-3"
+                        class={`z-50  flex  items-center p-4 ${
+                          submitted === 1
+                            ? "text-green-800 border-t-4 border-green-300 bg-green-100 dark:text-green-600 dark:bg-gray-800 dark:border-green-800"
+                            : "text-red-800 border-t-4 border-red-300 bg-red-100 dark:text-red-600 dark:bg-gray-800 dark:border-red-800"
+                        } `}
+                        role="alert"
+                      >
+                        <svg
+                          class="flex-shrink-0 w-4 h-4"
+                          aria-hidden="true"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill={`${submitted === 1 ? "green" : "red"} `}
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                        </svg>
+                        <div class="text-left pr-3 ms-3 text-sm font-medium">
+                          {submitted === 1 ? (
+                            <span className="text-lg text-green-600 py-5 ">
+                              <span className={`hidden md:inline-block`}>
+                                Promotion Creation{" "}
+                              </span>{" "}
+                              Successfull!
+                            </span>
+                          ) : submitted === 2 ? (
+                            <span className="text-lg text-red-600 py-5 ">
+                              <span className={`hidden md:inline-block`}>
+                                Promotion Creation{" "}
+                              </span>{" "}
+                              Failed!{" "}
+                              <span className={`hidden md:inline-block`}>
+                                Server Error{" "}
+                              </span>
+                            </span>
+                          ) : submitted === 5 ? (
+                            <span className="text-lg text-red-600 py-5 ">
+                              <span className={`hidden md:block`}>
+                                Promotion Creation
+                              </span>{" "}
+                              Failed!{" "}
+                              <span className={`hidden md:block`}>
+                                Please Enter Required Fields
+                              </span>{" "}
+                            </span>
+                          ) : (
+                            ""
+                          )}{" "}
+                          <a
+                            href="#"
+                            class="font-semibold underline hover:no-underline"
+                          >
+                            {" "}
+                            Dashboard
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      ""
+                    )}
                     <button
                       onClick={() => setNextPage()}
                       type="button"
-                      className="mt-10 px-4 py-2 border-bluex-500 border-solid border-2 bg-blue-700 text-white rounded-lg "
+                      className=" px-4 py-2 border-blue-500 border-solid border-2 bg-blue-700 text-white rounded-lg "
                     >
                       Next
                     </button>
@@ -430,7 +494,7 @@ function CreatePromotion() {
                 </div>
               )}
               {step == 2 && (
-                <div>
+                <div className="  transition-all duration-500">
                   <div>
                     {method === 1 ? (
                       <span>Discount By Percentage</span>
@@ -498,7 +562,7 @@ function CreatePromotion() {
                               onBlur={(e) => {
                                 handleEmpty(e);
                               }}
-                              name={item}
+                              name="applicableItems"
                               required
                             />
 
@@ -690,7 +754,7 @@ function CreatePromotion() {
                 </div>
               )}
               {step == 3 && (
-                <div>
+                <div className="transition-all duration-500">
                   <div>
                     {method === 1 ? (
                       <span>Discount By Percentage</span>

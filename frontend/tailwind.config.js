@@ -6,6 +6,10 @@ module.exports = {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
       },
+      colors: {
+        "custom-green": "#00FF00",
+        "custom-red": "#FF0000",
+      },
     },
   },
   plugins: [require("flowbite/plugin")],
