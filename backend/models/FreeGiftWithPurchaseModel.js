@@ -1,10 +1,9 @@
 const mongoose = require("mongoose");
 
-const FreeGiftWithPurchaseSchema = new mongoose.Schema({
+const DiscountAmount = new mongoose.Schema({
   promotionType: {
-    type: String,
-    enum: ["Free Gift with Purchase"],
-    default: "Free Gift with Purchase",
+    type: Number,
+    required: true,
   },
   storeName: {
     type: String,
@@ -14,7 +13,7 @@ const FreeGiftWithPurchaseSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  freeGiftItemID: {
+  discountAmount: {
     type: String,
     required: true,
   },
@@ -35,7 +34,4 @@ const FreeGiftWithPurchaseSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model(
-  "FreeGiftWithPurchase",
-  FreeGiftWithPurchaseSchema
-);
+module.exports = mongoose.model("DiscountAmount", DiscountAmount);

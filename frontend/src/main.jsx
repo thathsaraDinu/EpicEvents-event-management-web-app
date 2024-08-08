@@ -10,6 +10,7 @@ import "flowbite";
 import CreateEvent from './Components/Events/CreateEvent.jsx'
 import UpdateEvents from './Components/Events/UpdateEvent.jsx'
 import CreatePromotion from './Components/Events/CreatePromotion.jsx'
+import ShowPromotionsAdmin from './Components/Events/ShowPromotionsAdmin.jsx'
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
   {
     path: "/promotion",
     element: <CreatePromotion></CreatePromotion>,
+  },
+  {
+    path: "/allpromotions",
+    element: <ShowPromotionsAdmin></ShowPromotionsAdmin>,
   },
   {
     path: "events",

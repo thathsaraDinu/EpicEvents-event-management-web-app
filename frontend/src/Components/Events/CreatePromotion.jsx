@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, useAnimation } from "framer-motion";
+import React, { useState } from "react";
 import MainMenu from "../MainMenu";
 import Footer from "../Footer";
 import getApiUrl from "../getApiUrl";
@@ -7,46 +6,53 @@ import getApiUrl from "../getApiUrl";
 function CreatePromotion() {
   const [step, setStep] = useState(1);
   const [method, setMethod] = useState(0);
-  const [inputValue, setInputValue] = useState(""); // State to store the input value
-  const [errorPage1, setErrorPage1] = useState(false);
   const [errorPage2, setErrorPage2] = useState(false);
   const apiUrl = getApiUrl();
   const [errorPage3, setErrorPage3] = useState(false);
   const [submitted, setSubmitted] = useState(null);
 
   const [errors, setErrors] = useState({
-    bundleItems: "",
     discountAmount: "",
     discountPercentage: "",
     applicableItems: "",
     qualifyingPurchaseAmount: "",
-    freeGiftItemID: "",
     startDate: "",
     endDate: "",
     description: "",
   });
 
   const [formData, setFormData] = useState({
-    promotionType: 0,
+    promotionType: -1,
     storeName: "",
-    bundleItems: [""],
-    discountAmount: "",
-    discountPercentage: "",
+    discountAmount: 0,
+    discountPercentage: 0,
     applicableItems: [""],
-    qualifyingPurchaseAmount: "",
-    freeGiftItemID: "",
+    qualifyingPurchaseAmount: 0,
     startDate: "",
     endDate: "",
     description: "",
   });
+
   const resetErrors = () => {
     setErrors({
-      bundleItems: "",
       discountAmount: "",
       discountPercentage: "",
       applicableItems: "",
       qualifyingPurchaseAmount: "",
-      freeGiftItemID: "",
+      startDate: "",
+      endDate: "",
+      description: "",
+    });
+  };
+
+  const resetFields = () => {
+    setFormData({
+      promotionType: -1,
+      storeName: "",
+      discountAmount: 0,
+      discountPercentage: 0,
+      applicableItems: [""],
+      qualifyingPurchaseAmount: 0,
       startDate: "",
       endDate: "",
       description: "",
@@ -59,22 +65,8 @@ function CreatePromotion() {
       ...formData,
       [name]: value,
     });
-  };
 
-  const resetFields = () => {
-    setFormData({
-      promotionType: 0,
-      storeName: "",
-      bundleItems: [""],
-      discountAmount: "",
-      discountPercentage: "",
-      applicableItems: [""],
-      qualifyingPurchaseAmount: "",
-      freeGiftItemID: "",
-      startDate: "",
-      endDate: "",
-      description: "",
-    });
+    handleEmpty(e, 1);
   };
 
   const handleItemChange = (index, value, type) => {
@@ -85,14 +77,41 @@ function CreatePromotion() {
         ...formData,
         applicableItems: items,
       });
-    } else if (type == 2) {
-      const items = [...formData.bundleItems];
-      items[index] = value;
-      setFormData({
-        ...formData,
-        bundleItems: items,
+    }
+  };
+  ////////////////////////////////////////////////////////////////
+
+  const handleEmpty = (e, word) => {
+    const updateErrors = (prevErrors, key, value) => ({
+      [key]:
+        (typeof value === "string" && value.trim() === "") || value == 0
+          ? "required"
+          : "",
+      discountPercentage:
+        key === "discountPercentage"
+          ? value > 100
+            ? "Should be smaller than 100"
+            : value == 0
+            ? "required"
+            : ""
+          : prevErrors?.discountPercentage || "",
+    });
+
+    if (word == 1) {
+      const { name, value } = e.target;
+      setErrors((prevErrors = {}) => ({
+        ...prevErrors,
+        ...updateErrors(prevErrors, name, value),
+      }));
+    } else {
+      Object.entries(e).forEach(([key, value]) => {
+        setErrors((prevErrors = {}) => ({
+          ...prevErrors,
+          ...updateErrors(prevErrors, key, value),
+        }));
       });
     }
+    console.log(errors);
   };
 
   const addItem = (type) => {
@@ -100,11 +119,6 @@ function CreatePromotion() {
       setFormData({
         ...formData,
         applicableItems: [...formData.applicableItems, ""],
-      });
-    } else if (type == 2) {
-      setFormData({
-        ...formData,
-        bundleItems: [...formData.bundleItems, ""],
       });
     }
   };
@@ -116,16 +130,56 @@ function CreatePromotion() {
         ...formData,
         applicableItems: items,
       });
-    } else if (type == 2) {
-      const items = formData.bundleItems.filter((_, i) => i !== index);
-      setFormData({
-        ...formData,
-        bundleItems: items,
-      });
     }
   };
 
-  const inputRefs = useRef({});
+  const setNextPage = () => {
+    console.log("pressed next.", "step:", step, "method:", method);
+    if (step == 1) {
+      setFormData((prevItems) => ({
+        ...prevItems,
+        promotionType: method,
+      }));
+      if (method === 0) {
+      } else {
+        resetErrors();
+        setStep(step + 1);
+
+        setSubmitted(null);
+      }
+    } else {
+      const filteredItems = formData.applicableItems.filter(
+        (item) => item !== ""
+      );
+      if (
+        ((formData.applicableItems.length != 0 &&
+          filteredItems != 0 &&
+          formData.discountPercentage != 0 &&
+          formData.discountPercentage <= 100 &&
+          formData.promotionType == 1) ||
+          (formData.qualifyingPurchaseAmount != 0 &&
+            formData.discountAmount != 0 &&
+            formData.promotionType == 3)) &&
+        formData.description &&
+        formData.storeName
+      ) {
+        setStep(step + 1);
+        resetErrors();
+        setErrorPage2(false);
+      } else {
+        handleEmpty(formData, 2);
+        setErrorPage2(true);
+        return;
+      }
+    }
+  };
+
+  const setPreviousPage = () => {
+    setStep(step - 1);
+
+    setErrorPage2(false);
+    setErrorPage3(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,6 +188,7 @@ function CreatePromotion() {
       console.log(formData);
       if (!formData.startDate || !formData.endDate) {
         setErrorPage3(true);
+        handleEmpty(formData, 2);
         console.log("add date");
         return;
       }
@@ -149,7 +204,7 @@ function CreatePromotion() {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      setStep(1);
+      setStep(4);
       resetFields();
       setMethod(0);
       if (response.status == 200) {
@@ -162,71 +217,12 @@ function CreatePromotion() {
         setSubmitted(2);
       }
     } catch (error) {
-      setStep(1);
+      setStep(4);
       resetFields();
       setMethod(0);
       setErrorPage3(false);
       setSubmitted(2);
     }
-  };
-  ////////////////////////////////////////////////////////////////
-  const handleEmpty = (e) => {
-    const { name, value } = e.target;
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: value.trim() === "" ? "required" : "",
-    }));
-    console.log(errors);
-  };
-
-  const setNextPage = () => {
-    console.log(step, method);
-    if (step == 1) {
-      if (!method) {
-        setErrorPage1(true);
-      } else {
-        setFormData((prevItems) => ({
-          ...prevItems,
-          promotionType: method,
-        }));
-        resetErrors();
-        setStep(step + 1);
-        setErrorPage1(false);
-        setSubmitted(null)
-      }
-    } else {
-      const filteredBundle = formData.bundleItems.filter(
-        (item) => item !== null
-      );
-
-      const filteredItems = formData.applicableItems.filter(
-        (item) => item !== ""
-      );
-      if (
-        ((formData.applicableItems.length != 0 &&
-          filteredItems != 0 &&
-          formData.discountPercentage &&
-          method == 1) ||
-          (filteredBundle != 0 && formData.discountAmount && method == 2) ||
-          (formData.qualifyingPurchaseAmount &&
-            formData.freeGiftItemID &&
-            method == 3)) &&
-        formData.description
-      ) {
-        setStep(step + 1);
-        resetErrors();
-        setErrorPage2(false);
-      } else {
-        setErrorPage2(true);
-        return;
-      }
-    }
-  };
-  const setPreviousPage = () => {
-    setStep(step - 1);
-
-    setErrorPage1(false);
-    setErrorPage2(false);
   };
 
   return (
@@ -282,7 +278,7 @@ function CreatePromotion() {
                       <p
                         id="steptext"
                         className={`lg:block hidden font-sans text-base antialiased font-normal leading-relaxed  ${
-                          step == 1 ? "text-black" : "text-gray-300"
+                          step == 1 ? "text-black" : "text-green-500"
                         }`}
                       >
                         Select Type
@@ -293,7 +289,7 @@ function CreatePromotion() {
                     className={`relative z-10 grid w-10 h-10 font-bold transition-all duration-300  ${
                       step == 2
                         ? "text-white  bg-gray-900"
-                        : step == 3
+                        : step == 3 || step == 4
                         ? "text-white bg-green-500"
                         : "text-white  bg-gray-300"
                     } rounded-full place-items-center`}
@@ -318,7 +314,7 @@ function CreatePromotion() {
                         className={`block font-sans text-base antialiased font-semibold leading-relaxed tracking-normal ${
                           step == 2
                             ? "text-gray-900 "
-                            : step == 3
+                            : step == 3 || step == 4
                             ? "text-green-500"
                             : "text-gray-300 "
                         }`}
@@ -329,7 +325,7 @@ function CreatePromotion() {
                         className={`lg:block hidden font-sans text-base antialiased font-normal leading-relaxed  ${
                           step == 2
                             ? "text-gray-900 "
-                            : step == 3
+                            : step == 3 || step == 4
                             ? "text-green-500"
                             : "text-gray-300 "
                         }`}
@@ -342,6 +338,8 @@ function CreatePromotion() {
                     className={`relative z-10 grid w-10 h-10 font-bold transition-all duration-300  ${
                       step == 3
                         ? "text-white  bg-gray-900"
+                        : step == 4
+                        ? "text-white  bg-green-500"
                         : "text-white bg-gray-300"
                     } rounded-full place-items-center`}
                   >
@@ -363,14 +361,22 @@ function CreatePromotion() {
                     <div className="absolute bottom-[3.5rem] lg:-bottom-[4.5rem] w-max text-center">
                       <h6
                         className={`block font-sans text-base antialiased font-semibold leading-relaxed tracking-normal ${
-                          step == 3 ? "text-black" : "text-gray-300"
+                          step == 3
+                            ? "text-black"
+                            : step == 4
+                            ? "text-green-500"
+                            : "text-gray-300"
                         }`}
                       >
                         Step 3
                       </h6>
                       <p
                         className={`lg:block hidden font-sans text-base antialiased font-normal leading-relaxed  ${
-                          step == 3 ? "text-black" : "text-gray-300"
+                          step == 3
+                            ? "text-black"
+                            : step == 4
+                            ? "text-green-500"
+                            : "text-gray-300"
                         }`}
                       >
                         Confirm
@@ -387,13 +393,14 @@ function CreatePromotion() {
                 >
                   <div className="mt-5 mb-10 flex pt-5 items-center flex-col gap-2">
                     <label>Select a Promotion type</label>
-                    {errorPage1 ? (
-                      <p className="font-semibold text-red-500 pt-2 text-end">
+                    <div className="h-6">
+                    {formData.promotionType === 0 ? (
+                      <p className="font-semibold text-red-500 pt-2  text-end">
                         Please Select an option
                       </p>
                     ) : (
                       ""
-                    )}
+                    )}</div>
                     <select
                       name="promotionType"
                       className="mt-4 px-4 py-3 rounded-lg"
@@ -402,17 +409,17 @@ function CreatePromotion() {
                         resetFields();
                         setMethod(Number(e.target.value));
 
-                        console.log(e.target.value);
+                        console.log("method:", e.target.value);
                       }}
                     >
-                      <option className="px-4 py-3" value={""}>
+                      <option className="px-4 py-3" value={0}>
                         Select type
                       </option>
                       <option value={1} className="p-10">
                         Discount Percentage
                       </option>
-                      <option value={2}>Bundle Deal</option>
-                      <option value={3}>Free Gift Promotion</option>
+
+                      <option value={3}>Discount on Amount</option>
                     </select>
                   </div>
 
@@ -421,68 +428,6 @@ function CreatePromotion() {
                       submitted ? " sm:justify-between" : "sm:justify-end"
                     } text-end `}
                   >
-                    {submitted ? (
-                      <div
-                        id="alert-border-3"
-                        class={`z-50  flex  items-center p-4 ${
-                          submitted === 1
-                            ? "text-green-800 border-t-4 border-green-300 bg-green-100 dark:text-green-600 dark:bg-gray-800 dark:border-green-800"
-                            : "text-red-800 border-t-4 border-red-300 bg-red-100 dark:text-red-600 dark:bg-gray-800 dark:border-red-800"
-                        } `}
-                        role="alert"
-                      >
-                        <svg
-                          class="flex-shrink-0 w-4 h-4"
-                          aria-hidden="true"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill={`${submitted === 1 ? "green" : "red"} `}
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
-                        </svg>
-                        <div class="text-left pr-3 ms-3 text-sm font-medium">
-                          {submitted === 1 ? (
-                            <span className="text-lg text-green-600 py-5 ">
-                              <span className={`hidden md:inline-block`}>
-                                Promotion Creation{" "}
-                              </span>{" "}
-                              Successfull!
-                            </span>
-                          ) : submitted === 2 ? (
-                            <span className="text-lg text-red-600 py-5 ">
-                              <span className={`hidden md:inline-block`}>
-                                Promotion Creation{" "}
-                              </span>{" "}
-                              Failed!{" "}
-                              <span className={`hidden md:inline-block`}>
-                                Server Error{" "}
-                              </span>
-                            </span>
-                          ) : submitted === 5 ? (
-                            <span className="text-lg text-red-600 py-5 ">
-                              <span className={`hidden md:block`}>
-                                Promotion Creation
-                              </span>{" "}
-                              Failed!{" "}
-                              <span className={`hidden md:block`}>
-                                Please Enter Required Fields
-                              </span>{" "}
-                            </span>
-                          ) : (
-                            ""
-                          )}{" "}
-                          <a
-                            href="#"
-                            class="font-semibold underline hover:no-underline"
-                          >
-                            {" "}
-                            Dashboard
-                          </a>
-                        </div>
-                      </div>
-                    ) : (
-                      ""
-                    )}
                     <button
                       onClick={() => setNextPage()}
                       type="button"
@@ -498,10 +443,8 @@ function CreatePromotion() {
                   <div>
                     {method === 1 ? (
                       <span>Discount By Percentage</span>
-                    ) : method === 2 ? (
-                      <span>Bundle Deals</span>
                     ) : method === 3 ? (
-                      <span>Free Gift Item</span>
+                      <span>Discount on Amount</span>
                     ) : (
                       `No Type Selected ${method}`
                     )}
@@ -513,7 +456,6 @@ function CreatePromotion() {
                       type="text"
                       name="storeName"
                       value={formData.storeName}
-                      ref={(el) => (inputRefs.current["storeName"] = el)}
                       onChange={(e) => {
                         handleChange(e);
                       }}
@@ -526,19 +468,19 @@ function CreatePromotion() {
                       <div>
                         <label>Discount Percentage:</label>
                         <input
+                          max="100"
                           type="number"
                           name="discountPercentage"
                           className={`border-solid border-2`}
-                          ref={(el) =>
-                            (inputRefs.current["discountPercentage"] = el)
+                          value={
+                            formData.discountPercentage != 0
+                              ? `${formData.discountPercentage}`
+                              : ""
                           }
-                          value={formData.discountPercentage}
                           onChange={(e) => {
                             handleChange(e);
                           }}
-                          onBlur={(e) => {
-                            handleEmpty(e);
-                          }}
+                          onBlur={(e) => {}}
                         />
                         {errors.discountPercentage && (
                           <span className="text-sm text-red-600 font-semibold">
@@ -554,13 +496,10 @@ function CreatePromotion() {
                             <input
                               type="text"
                               className={`border-solid border-2`}
-                              ref={(el) => (inputRefs.current[item] = el)}
                               value={item}
                               onChange={(e) => {
                                 handleItemChange(index, e.target.value, 1);
-                              }}
-                              onBlur={(e) => {
-                                handleEmpty(e);
+                                handleEmpty(e, 1);
                               }}
                               name="applicableItems"
                               required
@@ -586,74 +525,7 @@ function CreatePromotion() {
                     </div>
                   )}
 
-                  {method === 2 && (
-                    <div>
-                      <div>
-                        <label>Bundle Items:</label>
-                        {formData.bundleItems.map((item, index) => (
-                          <div key={index}>
-                            <input
-                              type="text"
-                              className={`border-solid border-2`}
-                              ref={(el) => (inputRefs.current[item] = el)}
-                              value={item}
-                              onChange={(e) => {
-                                handleItemChange(index, e.target.value, 2);
-                              }}
-                              onBlur={(e) => {
-                                handleEmpty(e);
-                              }}
-                              name="bundleItems"
-                              required
-                            />
-
-                            <button
-                              type="button"
-                              onClick={() => removeItem(index, 2)}
-                            >
-                              Remove
-                            </button>
-                            {errors.bundleItems && (
-                              <span className="text-sm text-red-600 font-semibold">
-                                {errors.bundleItems}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            addItem(2);
-                          }}
-                        >
-                          Add Item
-                        </button>
-                      </div>
-                      <div>
-                        <label>Discount Amount:</label>
-                        <input
-                          type="number"
-                          name="discountAmount"
-                          className={`border-solid border-2`}
-                          ref={(el) =>
-                            (inputRefs.current["discountAmount"] = el)
-                          }
-                          value={formData.discountAmount}
-                          onChange={(e) => {
-                            handleChange(e);
-                          }}
-                          onBlur={(e) => {
-                            handleEmpty(e);
-                          }}
-                        />
-                        {errors.discountAmount && (
-                          <span className="text-sm text-red-600 font-semibold">
-                            {errors.discountAmount}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {method === 2 && ""}
 
                   {method === 3 && (
                     <div>
@@ -663,15 +535,13 @@ function CreatePromotion() {
                           type="number"
                           name="qualifyingPurchaseAmount"
                           className={`border-solid border-2`}
-                          ref={(el) =>
-                            (inputRefs.current["qualifyingPurchaseAmount"] = el)
+                          value={
+                            formData.qualifyingPurchaseAmount != 0
+                              ? `${formData.qualifyingPurchaseAmount}`
+                              : ""
                           }
-                          value={formData.qualifyingPurchaseAmount}
                           onChange={(e) => {
-                            handleChange(e);
-                          }}
-                          onBlur={(e) => {
-                            handleEmpty(e);
+                            handleChange(e, 1);
                           }}
                         />
                         {errors.qualifyingPurchaseAmount && (
@@ -681,25 +551,23 @@ function CreatePromotion() {
                         )}
                       </div>
                       <div>
-                        <label>Free Gift Item ID</label>
+                        <label>Discount Amount</label>
                         <input
-                          type="text"
-                          name="freeGiftItemID"
+                          type="number"
+                          name="discountAmount"
                           className={`border-solid border-2`}
-                          ref={(el) =>
-                            (inputRefs.current["freeGiftItemID"] = el)
+                          value={
+                            formData.discountAmount != 0
+                              ? `${formData.discountAmount}`
+                              : ""
                           }
-                          value={formData.freeGiftItemID}
                           onChange={(e) => {
-                            handleChange(e);
-                          }}
-                          onBlur={(e) => {
-                            handleEmpty(e);
+                            handleChange(e, 1);
                           }}
                         />
-                        {errors.freeGiftItemID && (
+                        {errors.discountAmount && (
                           <span className="text-sm text-red-600 font-semibold">
-                            {errors.freeGiftItemID}
+                            {errors.discountAmount}
                           </span>
                         )}
                       </div>
@@ -712,13 +580,9 @@ function CreatePromotion() {
                       type="text"
                       name="description"
                       className={`border-solid border-2`}
-                      ref={(el) => (inputRefs.current["description"] = el)}
                       value={formData.description}
                       onChange={(e) => {
-                        handleChange(e);
-                      }}
-                      onBlur={(e) => {
-                        handleEmpty(e);
+                        handleChange(e, 1);
                       }}
                     />
                     {errors.description && (
@@ -727,13 +591,14 @@ function CreatePromotion() {
                       </span>
                     )}
                   </div>
+                  <div className="h-5">
                   {errorPage2 ? (
                     <p className="font-semibold text-red-500 pt-5 text-end">
                       Please Fill the Required Fields
                     </p>
                   ) : (
                     ""
-                  )}
+                  )}</div>
 
                   <div className="sm:mt-10 mt-5  flex flex-wrap justify-center sm:justify-end gap-5 w-full text-end ">
                     <button
@@ -758,10 +623,8 @@ function CreatePromotion() {
                   <div>
                     {method === 1 ? (
                       <span>Discount By Percentage</span>
-                    ) : method === 2 ? (
-                      <span>Bundle Deals</span>
                     ) : method === 3 ? (
-                      <span>Free Gift Item</span>
+                      <span>Discount on Amount</span>
                     ) : (
                       "No Type Selected"
                     )}
@@ -772,15 +635,16 @@ function CreatePromotion() {
                       type="date"
                       name="startDate"
                       className={`border-solid border-2`}
-                      ref={(el) => (inputRefs.current["startDate"] = el)}
-                      onBlur={(e) => {
-                        handleEmpty(e);
-                      }}
                       value={formData.startDate}
                       onChange={(e) => {
-                        handleChange(e);
+                        handleChange(e, 1);
                       }}
                     />
+                    {errors.startDate && (
+                      <span className="text-sm text-red-600 font-semibold">
+                        {errors.startDate}
+                      </span>
+                    )}
                   </div>
 
                   <div>
@@ -789,23 +653,25 @@ function CreatePromotion() {
                       type="date"
                       name="endDate"
                       className={`border-solid border-2`}
-                      ref={(el) => (inputRefs.current["endDate"] = el)}
-                      onBlur={(e) => {
-                        handleEmpty(e);
-                      }}
                       value={formData.endDate}
                       onChange={(e) => {
-                        handleChange(e);
+                        handleChange(e, 1);
                       }}
                     />
+                    {errors.endDate && (
+                      <span className="text-sm text-red-600 font-semibold">
+                        {errors.endDate}
+                      </span>
+                    )}
                   </div>
+                  <div className="h-5">
                   {errorPage3 ? (
                     <p className="font-semibold text-red-500 pt-5  text-end">
                       Please Fill the Required Fields
                     </p>
                   ) : (
                     ""
-                  )}
+                  )}</div>
                   <div className="sm:mt-10 mt-5 w-full flex flex-wrap justify-center sm:justify-end gap-5 sm:text-end ">
                     <button
                       onClick={() => setPreviousPage()}
@@ -822,6 +688,72 @@ function CreatePromotion() {
                     </button>
                   </div>
                 </div>
+              )}
+              {step == 4 ? (
+                submitted ? (
+                  <div
+                    id="alert-border-3"
+                    class={`z-50  flex  items-center p-4 ${
+                      submitted === 1
+                        ? "text-green-800 border-t-4 border-green-300 bg-green-100 dark:text-green-600 dark:bg-gray-800 dark:border-green-800"
+                        : "text-red-800 border-t-4 border-red-300 bg-red-100 dark:text-red-600 dark:bg-gray-800 dark:border-red-800"
+                    } `}
+                    role="alert"
+                  >
+                    <svg
+                      class="flex-shrink-0 w-4 h-4"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill={`${submitted === 1 ? "green" : "red"} `}
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                    </svg>
+                    <div class="text-left  pr-3 ms-3 text-sm font-medium">
+                      {submitted === 1 ? (
+                        <span className="text-lg text-green-600 py-5 ">
+                          <span className={`hidden md:inline-block`}>
+                            Promotion Creation{" "}
+                          </span>{" "}
+                          Successfull!
+                        </span>
+                      ) : submitted === 2 ? (
+                        <span className="text-lg text-red-600 py-5 ">
+                          <span className={`hidden md:inline-block`}>
+                            Promotion Creation{" "}
+                          </span>{" "}
+                          Failed!{" "}
+                          <span className={`hidden md:inline-block`}>
+                            Server Error{" "}
+                          </span>
+                        </span>
+                      ) : submitted === 5 ? (
+                        <span className="text-lg text-red-600 py-5 ">
+                          <span className={`hidden md:block`}>
+                            Promotion Creation
+                          </span>{" "}
+                          Failed!{" "}
+                          <span className={`hidden md:block`}>
+                            Please Enter Required Fields
+                          </span>{" "}
+                        </span>
+                      ) : (
+                        ""
+                      )}{" "}
+                      <a
+                        href="#"
+                        class="font-semibold underline hover:no-underline"
+                      >
+                        {" "}
+                        Dashboard
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  ""
+                )
+              ) : (
+                ""
               )}
             </form>
           </div>

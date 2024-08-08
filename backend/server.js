@@ -66,3 +66,10 @@ app.get("/getEventById/:id", async (req, res) => {
 app.post("/createpromotion", async (req, res) => {
   promotioncontroller.createPromotion(req, res);
 });
+
+app.get("/discountpromotions", async (req, res) => {
+  promotioncontroller.getAllDiscounts(req, res);
+});
+app.get("/discountamounts", async (req, res) => {
+  promotioncontroller.getAllFreeGifts(req, res);
+});

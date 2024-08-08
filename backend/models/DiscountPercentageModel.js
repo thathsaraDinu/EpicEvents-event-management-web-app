@@ -2,9 +2,8 @@ const mongoose = require("mongoose");
 
 const DiscountPercentageSchema = new mongoose.Schema({
   promotionType: {
-    type: String,
-    enum: ["Discount Percentage"],
-    default: "Discount Percentage",
+    type: Number,
+    required: true,
   },
 
   storeName: {

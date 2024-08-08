@@ -8,15 +8,14 @@ const createPromotion = async (req, res) => {
     const {
       promotionType: promotionType,
       storeName: storeName,
-      bundleItems: bundleItems,
-      discountAmount: discountAmount,
+      
       startDate: startDate,
       endDate: endDate,
       description: description,
       discountPercentage: discountPercentage,
       applicableItems: applicableItems,
       qualifyingPurchaseAmount: qualifyingPurchaseAmount,
-      freeGiftItemID: freeGiftItemID,
+      discountAmount: discountAmount,
     } = req.body;
     console.log(req.body);
     console.log("test 1");
@@ -29,17 +28,16 @@ const createPromotion = async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-   
-
     if (now >= start && now <= end) {
       isActive = true;
     } else {
       isActive = false;
     }
+    
     console.log("test 3");
     let newPromotion;
 
-    if (promotionType == 1) {
+    if (promotionType === 1) {
       console.log("test - inside promotion type select");
       if (!discountPercentage || !applicableItems)
         return res
@@ -47,7 +45,7 @@ const createPromotion = async (req, res) => {
           .json({ message: "Please enter discount required fields" });
 
       newPromotion = new discount({
-        promotionType: "Discount Percentage",
+        promotionType: 1,
         storeName,
         discountPercentage,
         applicableItems,
@@ -57,41 +55,24 @@ const createPromotion = async (req, res) => {
         isActive,
       });
       console.log("test discount newPromotion created");
-    } else if (promotionType == 2) {
-      if (!bundleItems || !discountAmount)
+    } else if(promotionType === 3) {
+      if (!qualifyingPurchaseAmount || !discountAmount)
         return res
           .status(400)
-          .json({ message: "Please enter bundleDeal required fields" });
+          .json({ message: "Please enter discount amount required fields" });
 
-      newPromotion = new bundleDeal({
-        promotionType: "Bundle Deal",
+      newPromotion = new freeGift({
+        promotionType: 3,
         storeName,
-        bundleItems,
+        qualifyingPurchaseAmount,
         discountAmount,
         startDate: start,
         endDate: end,
         description,
         isActive,
       });
-      console.log("test bundle new Promotion created");
-    } else if (promotionType == 3) {
-      if (!qualifyingPurchaseAmount || !freeGiftItemID)
-        return res
-          .status(400)
-          .json({ message: "Please enter FreeGift required fields" });
 
-      newPromotion = new freeGift({
-        promotionType: "Free Gift with Purchase",
-        storeName,
-        qualifyingPurchaseAmount,
-        freeGiftItemID,
-        startDate: start,
-        endDate: end,
-        description,
-        isActive,
-      });
-
-      console.log("test free gift newPromotion created");
+      console.log("test discount amount newPromotion created");
     } else {
       return res.json({ message: "invalid promotion type" });
     }
@@ -100,8 +81,27 @@ const createPromotion = async (req, res) => {
 
     return res.status(200).json({ savedprom: savedPromotion });
   } catch (error) {
-    res.status(500).json({err: error, message: "failed, internal error" });
+    res.status(500).json({ err: error, message: "failed, internal error" });
   }
 };
 
+const getAllDiscounts = async (req, res) => {
+  try {
+    const promotions = await discount.find();
+    return res.json(promotions);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+const getAllFreeGifts = async (req, res) => {
+  try {
+    const promotions = await freeGift.find();
+    return res.json(promotions);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
 exports.createPromotion = createPromotion;
+exports.getAllDiscounts = getAllDiscounts;
+exports.getAllFreeGifts = getAllFreeGifts;
