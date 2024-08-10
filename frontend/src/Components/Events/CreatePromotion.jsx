@@ -6,12 +6,13 @@ import getApiUrl from "../getApiUrl";
 function CreatePromotion() {
   const [step, setStep] = useState(1);
   const [method, setMethod] = useState(0);
-  const [errorPage2, setErrorPage2] = useState(false);
+  const [errorPage, setErrorPage] = useState(0);
   const apiUrl = getApiUrl();
-  const [errorPage3, setErrorPage3] = useState(false);
+  
   const [submitted, setSubmitted] = useState(null);
 
   const [errors, setErrors] = useState({
+    promotionType:  "",
     discountAmount: "",
     discountPercentage: "",
     applicableItems: "",
@@ -35,6 +36,7 @@ function CreatePromotion() {
 
   const resetErrors = () => {
     setErrors({
+      promotionType: "",
       discountAmount: "",
       discountPercentage: "",
       applicableItems: "",
@@ -65,7 +67,6 @@ function CreatePromotion() {
       ...formData,
       [name]: value,
     });
-
     handleEmpty(e, 1);
   };
 
@@ -141,6 +142,8 @@ function CreatePromotion() {
         promotionType: method,
       }));
       if (method === 0) {
+        handleEmpty(formData, 2)
+        setErrorPage(1)
       } else {
         resetErrors();
         setStep(step + 1);
@@ -164,11 +167,9 @@ function CreatePromotion() {
         formData.storeName
       ) {
         setStep(step + 1);
-        resetErrors();
-        setErrorPage2(false);
       } else {
         handleEmpty(formData, 2);
-        setErrorPage2(true);
+        setErrorPage(2);
         return;
       }
     }
@@ -176,9 +177,8 @@ function CreatePromotion() {
 
   const setPreviousPage = () => {
     setStep(step - 1);
-
-    setErrorPage2(false);
-    setErrorPage3(false);
+    setErrorPage(0);
+    
   };
 
   const handleSubmit = async (e) => {
@@ -187,12 +187,12 @@ function CreatePromotion() {
     try {
       console.log(formData);
       if (!formData.startDate || !formData.endDate) {
-        setErrorPage3(true);
+        setErrorPage(3);
         handleEmpty(formData, 2);
         console.log("add date");
         return;
       }
-      setErrorPage3(false);
+      setErrorPage(4);
       // Add your form submission logic here
       const response = await fetch(apiUrl + "createpromotion", {
         method: "POST",
@@ -220,7 +220,6 @@ function CreatePromotion() {
       setStep(4);
       resetFields();
       setMethod(0);
-      setErrorPage3(false);
       setSubmitted(2);
     }
   };
@@ -394,13 +393,12 @@ function CreatePromotion() {
                   <div className="mt-5 mb-10 flex pt-5 items-center flex-col gap-2">
                     <label>Select a Promotion type</label>
                     <div className="h-6">
-                    {formData.promotionType === 0 ? (
-                      <p className="font-semibold text-red-500 pt-2  text-end">
-                        Please Select an option
-                      </p>
-                    ) : (
-                      ""
-                    )}</div>
+                      {errors.promotionType && (
+                        <span className="text-sm text-red-600 font-semibold">
+                          {errors.promotionType}
+                        </span>
+                      )}
+                    </div>
                     <select
                       name="promotionType"
                       className="mt-4 px-4 py-3 rounded-lg"
@@ -408,7 +406,7 @@ function CreatePromotion() {
                       onChange={(e) => {
                         resetFields();
                         setMethod(Number(e.target.value));
-
+                        handleChange(e);
                         console.log("method:", e.target.value);
                       }}
                     >
@@ -463,32 +461,42 @@ function CreatePromotion() {
                     />
                   </div>
 
-                  {method === 1 && (
+                  <div>
                     <div>
-                      <div>
-                        <label>Discount Percentage:</label>
-                        <input
-                          max="100"
-                          type="number"
-                          name="discountPercentage"
-                          className={`border-solid border-2`}
-                          value={
-                            formData.discountPercentage != 0
-                              ? `${formData.discountPercentage}`
+                      <label>
+                        {method == 1
+                          ? "Discount Percentage"
+                          : "Qualifying Purchase Amount"}
+                      </label>
+                      <input
+                        type="number"
+                        name={
+                          method === 1
+                            ? "discountPercentage"
+                            : "qualifyingPurchaseAmount"
+                        }
+                        className="border-solid border-2"
+                        value={
+                          method === 1
+                            ? formData.discountPercentage != 0
+                              ? formData.discountPercentage
                               : ""
-                          }
-                          onChange={(e) => {
-                            handleChange(e);
-                          }}
-                          onBlur={(e) => {}}
-                        />
-                        {errors.discountPercentage && (
-                          <span className="text-sm text-red-600 font-semibold">
-                            {errors.discountPercentage}
-                          </span>
-                        )}
-                      </div>
-
+                            : formData.qualifyingPurchaseAmount != 0
+                            ? formData.qualifyingPurchaseAmount
+                            : ""
+                        }
+                        onChange={(e) => {
+                          handleChange(e, 1);
+                        }}
+                        max={method === 1 ? 100 : undefined} // max is only relevant for discountPercentage
+                      />
+                      <span className="text-sm text-red-600 font-semibold">
+                        {method == 1
+                          ? errors.discountPercentage
+                          : errors.qualifyingPurchaseAmount}
+                      </span>
+                    </div>
+                    {method == 1 ? (
                       <div>
                         <label>Applicable Items:</label>
                         {formData.applicableItems.map((item, index) => (
@@ -522,34 +530,7 @@ function CreatePromotion() {
                           Add Item
                         </button>
                       </div>
-                    </div>
-                  )}
-
-                  {method === 2 && ""}
-
-                  {method === 3 && (
-                    <div>
-                      <div>
-                        <label>Qualifying Purchase Amount</label>
-                        <input
-                          type="number"
-                          name="qualifyingPurchaseAmount"
-                          className={`border-solid border-2`}
-                          value={
-                            formData.qualifyingPurchaseAmount != 0
-                              ? `${formData.qualifyingPurchaseAmount}`
-                              : ""
-                          }
-                          onChange={(e) => {
-                            handleChange(e, 1);
-                          }}
-                        />
-                        {errors.qualifyingPurchaseAmount && (
-                          <span className="text-sm text-red-600 font-semibold">
-                            {errors.qualifyingPurchaseAmount}
-                          </span>
-                        )}
-                      </div>
+                    ) : (
                       <div>
                         <label>Discount Amount</label>
                         <input
@@ -571,9 +552,8 @@ function CreatePromotion() {
                           </span>
                         )}
                       </div>
-                    </div>
-                  )}
-
+                    )}
+                  </div>
                   <div>
                     <label>Description:</label>
                     <textarea
@@ -592,13 +572,14 @@ function CreatePromotion() {
                     )}
                   </div>
                   <div className="h-5">
-                  {errorPage2 ? (
-                    <p className="font-semibold text-red-500 pt-5 text-end">
-                      Please Fill the Required Fields
-                    </p>
-                  ) : (
-                    ""
-                  )}</div>
+                    {errorPage == 2 ? (
+                      <p className="font-semibold text-red-500 pt-5 text-end">
+                        Please Fill the Required Fields
+                      </p>
+                    ) : (
+                      ""
+                    )}
+                  </div>
 
                   <div className="sm:mt-10 mt-5  flex flex-wrap justify-center sm:justify-end gap-5 w-full text-end ">
                     <button
@@ -618,6 +599,7 @@ function CreatePromotion() {
                   </div>
                 </div>
               )}
+
               {step == 3 && (
                 <div className="transition-all duration-500">
                   <div>
@@ -665,13 +647,21 @@ function CreatePromotion() {
                     )}
                   </div>
                   <div className="h-5">
-                  {errorPage3 ? (
-                    <p className="font-semibold text-red-500 pt-5  text-end">
-                      Please Fill the Required Fields
-                    </p>
-                  ) : (
-                    ""
-                  )}</div>
+                    {errorPage == 3 ? (
+                      <p className="font-semibold text-red-500 pt-5  text-end">
+                        Please Fill the Required Fields
+                      </p>
+                    ) : (
+                      ""
+                    )}
+                    {errorPage == 4 ? (
+                      <p className="font-semibold text-blue-500 pt-5  text-end">
+                        Please Wait
+                      </p>
+                    ) : (
+                      ""
+                    )}
+                  </div>
                   <div className="sm:mt-10 mt-5 w-full flex flex-wrap justify-center sm:justify-end gap-5 sm:text-end ">
                     <button
                       onClick={() => setPreviousPage()}

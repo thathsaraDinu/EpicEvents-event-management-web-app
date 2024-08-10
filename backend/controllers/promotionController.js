@@ -8,7 +8,7 @@ const createPromotion = async (req, res) => {
     const {
       promotionType: promotionType,
       storeName: storeName,
-      
+
       startDate: startDate,
       endDate: endDate,
       description: description,
@@ -28,21 +28,33 @@ const createPromotion = async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
+    const checkDate = (date) => {
+      if (isNaN(date.getTime())) {
+        return res.status(400).json({ message: "Invalid Date" });
+      } else {
+        console.log({ message: `${date} date is valid.` });
+      }
+    };
+
+    checkDate(start);
+    checkDate(end);
+
     if (now >= start && now <= end) {
       isActive = true;
     } else {
       isActive = false;
     }
-    
+
     console.log("test 3");
     let newPromotion;
 
     if (promotionType === 1) {
       console.log("test - inside promotion type select");
-      if (!discountPercentage || !applicableItems)
-        return res
-          .status(400)
-          .json({ message: "Please enter discount required fields" });
+      if (
+        (discountPercentage <= 0 && discountPercentage > 100) ||
+        !applicableItems
+      )
+        return res.status(400).json({ message: "Invalid Inputs" });
 
       newPromotion = new discount({
         promotionType: 1,
@@ -55,11 +67,9 @@ const createPromotion = async (req, res) => {
         isActive,
       });
       console.log("test discount newPromotion created");
-    } else if(promotionType === 3) {
-      if (!qualifyingPurchaseAmount || !discountAmount)
-        return res
-          .status(400)
-          .json({ message: "Please enter discount amount required fields" });
+    } else if (promotionType === 3) {
+      if (qualifyingPurchaseAmount <= 0 || discountAmount <= 0)
+        return res.status(400).json({ message: "Invalid Inputs" });
 
       newPromotion = new freeGift({
         promotionType: 3,
@@ -81,7 +91,9 @@ const createPromotion = async (req, res) => {
 
     return res.status(200).json({ savedprom: savedPromotion });
   } catch (error) {
-    res.status(500).json({ err: error, message: "failed, internal error" });
+    if (!res.headersSent) {
+      return res.status(500).json({ message: "Failed, internal error" });
+    }
   }
 };
 
