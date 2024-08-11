@@ -62,8 +62,8 @@ const AllEvents = () => {
                         className="rounded-t-lg h-2/5 w-full object-cover"
                         src={
                           item.eventPhoto
-                            ? "http://localhost:3001/images/" + item.eventPhoto
-                            : "http://localhost:3001/images/no-image.png"
+                            ? apiUrl + "images/" + item.eventPhoto
+                            : apiUrl + "images/no-image.png"
                         }
                         alt=""
                       />
