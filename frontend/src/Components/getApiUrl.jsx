@@ -7,7 +7,7 @@ export default function getApiUrl() {
     apiUrl = "http://localhost:3001/"; // Example local API URL
   } else {
     // Running on the web
-    apiUrl = "https://epiceventsbackend.onrender.com/"; // Example production API URL
+    apiUrl = "https://epicevents-event-management-web-app.onrender.com/"; // Example production API URL
   }
 
   return apiUrl;
