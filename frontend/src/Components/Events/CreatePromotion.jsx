@@ -8,11 +8,11 @@ function CreatePromotion() {
   const [method, setMethod] = useState(0);
   const [errorPage, setErrorPage] = useState(0);
   const apiUrl = getApiUrl();
-  
+
   const [submitted, setSubmitted] = useState(null);
 
   const [errors, setErrors] = useState({
-    promotionType:  "",
+    promotionType: "",
     discountAmount: "",
     discountPercentage: "",
     applicableItems: "",
@@ -142,12 +142,11 @@ function CreatePromotion() {
         promotionType: method,
       }));
       if (method === 0) {
-        handleEmpty(formData, 2)
-        setErrorPage(1)
+        handleEmpty(formData, 2);
+        setErrorPage(1);
       } else {
         resetErrors();
         setStep(step + 1);
-
         setSubmitted(null);
       }
     } else {
@@ -166,6 +165,7 @@ function CreatePromotion() {
         formData.description &&
         formData.storeName
       ) {
+        resetErrors();
         setStep(step + 1);
       } else {
         handleEmpty(formData, 2);
@@ -178,7 +178,6 @@ function CreatePromotion() {
   const setPreviousPage = () => {
     setStep(step - 1);
     setErrorPage(0);
-    
   };
 
   const handleSubmit = async (e) => {

@@ -8,7 +8,6 @@ const createPromotion = async (req, res) => {
     const {
       promotionType: promotionType,
       storeName: storeName,
-
       startDate: startDate,
       endDate: endDate,
       description: description,
