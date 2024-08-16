@@ -11,5 +11,8 @@
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.0"
+  }
 }

@@ -11,12 +11,22 @@ import CreateEvent from './Components/Events/CreateEvent.jsx'
 import UpdateEvents from './Components/Events/UpdateEvent.jsx'
 import CreatePromotion from './Components/Events/CreatePromotion.jsx'
 import ShowPromotionsAdmin from './Components/Events/ShowPromotionsAdmin.jsx'
+import ReactHookForm from "./Components/Events/reactHookForm.jsx";
+import { AddPromotionMain } from './Components/Events/addpromotionmain.jsx'
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App></App>,
     errorElement: <ErrorPage></ErrorPage>,
+  },
+  {
+    path: "/hookform",
+    element: <ReactHookForm></ReactHookForm>,
+  },
+  {
+    path: "/addpromotion",
+    element: <AddPromotionMain></AddPromotionMain>,
   },
   {
     path: "/promotion",

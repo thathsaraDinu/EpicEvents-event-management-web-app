@@ -744,6 +744,19 @@ function CreatePromotion() {
               ) : (
                 ""
               )}
+              <div
+                className={`w-full gap-5 sm:gap-10 flex items-center justify-center ${
+                  submitted ? " sm:justify-between" : "sm:justify-end"
+                } text-end `}
+              >
+                <button
+                  onClick={() => setNextPage()}
+                  type="button"
+                  className=" px-4 py-2 border-blue-500 border-solid border-2 bg-blue-700 text-white rounded-lg "
+                >
+                  Next
+                </button>
+              </div>
             </form>
           </div>
         </div>
