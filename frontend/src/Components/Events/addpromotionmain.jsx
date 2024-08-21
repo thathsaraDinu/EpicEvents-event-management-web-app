@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import getApiUrl from "../getApiUrl";
 import { useMultistepForm } from "./useMultistepForm";
 import MainMenu from "../MainMenu";
@@ -6,9 +6,9 @@ import Footer from "../Footer";
 import { AddPromotionStep1 } from "./addpromotionstep1";
 import { AddPromotionStep2 } from "./addpromotionstep2";
 import { AddPromotionStep3 } from "./addpromotionstep3";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { schema1, schema2, schema3, schema4 } from "./promotionvalidation";
 
 export function AddPromotionMain() {
   const [formData, setFormData] = useState({
@@ -22,54 +22,94 @@ export function AddPromotionMain() {
     endDate: "",
     description: "",
   });
- 
+  const [theStep, setTheStep] = useState(1);
 
-  const schema1 = z.object({
-    promotionType: z
-      .enum(["1", "3"], { message: "Please select a promotion type" })
-      
-  });
-
-  const schema2 = z.object({
-    storeName: z.string().min(1).max(255),
-    discountAmount: z.number().int().min(0),
-    discountPercentage: z.number().int().min(0).max(100),
-    applicableItems: z.array(z.string().min(1).max(255)),
-    qualifyingPurchaseAmount: z.number().int().min(0),
-    description: z.string().min(1).max(255),
-    });
+  
+  const apiUrl = getApiUrl();
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
+    setError
   } = useForm({
-    resolver: zodResolver(schema1),
+    resolver:
+      theStep == 1
+        ? zodResolver(schema1)
+        : theStep == 2
+        ? zodResolver(schema2)
+        : theStep == 3
+        ? zodResolver(schema3)
+        : zodResolver(schema4),
   });
 
   const onSubmit = async (data) => {
-   next();
-    console.log(data);
+    
+    try {
+      if (currentStepIndex == 2) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log("submitting");
+        const response = await fetch(apiUrl + "createpromotion", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+       if (!response.ok) {
+         response.json().then((data) => {
+           setError("root", {
+             type: "manual", // Optional: Specify the type of error (e.g., "manual")
+             message: data.message, // Accessing the message from the response JSON
+           });
+         });
+       }
+
+        if(response.status == 200){
+          console.log("success")
+          setError("root",  {
+            message: "success"
+          })
+        }
+
+        const data = await response.json();
+        console.log(data);
+      }
+      next();
+    } catch (error) {
+      
+    }
+    
     
   };
 
   const handleChange = (e) => {
+    console.log("the step", theStep);
     const { name, value } = e.target;
-
+    console.log(name, typeof value);
     setFormData((prevData) => ({
       ...prevData,
       [name]:
-        name === "promotionType" ||
-        name === "discountAmount" ||
-        name === "discountPercentage" ||
-        name === "qualifyingPurchaseAmount"
-          ? value === 0 || isNaN(value)
-            ? value
-            : Number(value) // Check for valid numeric input
+        name === "promotionType"
+          ? parseInt(value)
+          : name === "discountAmount" ||
+            name === "qualifyingPurchaseAmount" ||
+            name === "discountPercentage"
+          ?   !isNaN(parseFloat(value))
+            ? parseFloat(value)
+            : ""
           : value,
     }));
+
     console.log(formData);
   };
+
+  useEffect(() => {
+    if (currentStepIndex == 0) setTheStep(1)
+    else if (currentStepIndex == 1 && formData.promotionType == 1) setTheStep(2)
+    else if(currentStepIndex == 1 && formData.promotionType == 3) setTheStep(3)
+  else setTheStep(4)
+  });
 
   const addItem = (type) => {
     if (type == 1) {
@@ -100,33 +140,41 @@ export function AddPromotionMain() {
       });
     }
   };
- const {
-   steps,
-   currentStepIndex,
-   step,
-   isFirstStep,
-   isSecondStep,
-   isComplete,
-   next,
-   back,
-   isLastStep,
- } = useMultistepForm([
-   <AddPromotionStep1
-     {...formData}
-     handleChange={handleChange}
-     register={register}
-     errors={errors}
-   />,
-   <AddPromotionStep2
-     {...formData}
-     handleChange={handleChange}
-     addItem={addItem}
-     removeItem={removeItem}
-     handleItemChange={handleItemChange}
-   />,
-   <AddPromotionStep3 {...formData} handleChange={handleChange} />,
- ]);
-  
+  const {
+    steps,
+    currentStepIndex,
+    step,
+    isFirstStep,
+    isSecondStep,
+    isComplete,
+    next,
+    back,
+    isLastStep,
+  } = useMultistepForm([
+    <AddPromotionStep1
+      {...formData}
+      handleChange={handleChange}
+      register={register}
+      errors={errors}
+    />,
+    <AddPromotionStep2
+      {...formData}
+      handleChange={handleChange}
+      addItem={addItem}
+      register={register}
+      removeItem={removeItem}
+      handleItemChange={handleItemChange}
+      errors={errors}
+    />,
+    <AddPromotionStep3
+      {...formData}
+      register={register}
+      errors={errors}
+      handleChange={handleChange}
+    />,
+    
+  ]);
+
   return (
     <div className="">
       <MainMenu></MainMenu>
@@ -291,21 +339,7 @@ export function AddPromotionMain() {
                 </div>
               </div>
               {step}
-              <div className="mt-5 mb-10 flex pt-5 items-center flex-col gap-2">
-                <label>Select a Promotion type</label>
-                <div className="h-6"></div>
-
-                <input
-                  type="text"
-                  name="promotionType"
-                  onChange={(e) => {
-                    handleChange(e);
-                    console.log(typeof promotionType);
-                  }}
-                  {...register("promotionType")}
-                />
-                {errors.promotionType && <p>{errors.promotionType.message}</p>}
-              </div>
+{errors.root && <p>{errors.root.message}</p>}
               {!isComplete && (
                 <div
                   className={`w-full gap-5 sm:gap-10 flex items-center justify-center sm:justify-end text-end`}
@@ -324,7 +358,7 @@ export function AddPromotionMain() {
                     type="submit"
                     className=" px-4 py-2 border-blue-500 border-solid border-2 bg-blue-700 text-white rounded-lg "
                   >
-                    {isLastStep ? "Submit" : "Next"}
+                    {isLastStep ? "Submit" : isLastStep && isSubmitting ? "Submitting": "Next"}
                   </button>
                 </div>
               )}

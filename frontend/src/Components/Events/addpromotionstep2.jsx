@@ -12,11 +12,9 @@ export function AddPromotionStep2({
   addItem,
   removeItem,
   handleItemChange,
+  register,
+  errors,
 }) {
-  const updateFields = (fields) => {
-    handleChange(fields);
-  };
-
   return (
     <div className="  transition-all duration-500">
       <div>
@@ -35,9 +33,15 @@ export function AddPromotionStep2({
           type="text"
           name="storeName"
           value={storeName}
+          {...register("storeName", {
+            onChange: (e) => {
+              handleChange(e);
+              // Update state
+            },
+          })}
           id="inputField"
-          onChange={(e) => handleChange(e)}
         />
+        <div>{errors.storeName && <p>{errors.storeName.message}</p>}</div>
       </div>
 
       <div>
@@ -47,8 +51,20 @@ export function AddPromotionStep2({
               ? "Discount Percentage"
               : "Qualifying Purchase Amount"}
           </label>
+
           <input
-            type="number"
+            type="text"
+            {...register(
+              promotionType == 1
+                ? "discountPercentage"
+                : "qualifyingPurchaseAmount",
+              {
+                onChange: (e) => {
+                  handleChange(e);
+                  // Update state
+                },
+              }
+            )}
             name={
               promotionType == 1
                 ? "discountPercentage"
@@ -58,10 +74,18 @@ export function AddPromotionStep2({
             value={
               promotionType == 1 ? discountPercentage : qualifyingPurchaseAmount
             }
-            onChange={(e) => handleChange(e)}
             max={promotionType === 1 ? 100 : undefined} // max is only relevant for discountPercentage
           />
-          <span className="text-sm text-red-600 font-semibold"></span>
+
+          <div>
+            {promotionType == 1 && errors.discountPercentage ? (
+              <p>{errors.discountPercentage.message}</p>
+            ) : promotionType == 3 && errors.qualifyingPurchaseAmount ? (
+              <p>{errors.qualifyingPurchaseAmount.message}</p>
+            ) : (
+              ""
+            )}
+          </div>
         </div>
         {promotionType == 1 ? (
           <div>
@@ -70,20 +94,26 @@ export function AddPromotionStep2({
               <div key={index}>
                 <input
                   type="text"
-                  className={`border-solid border-2`}
+                  className="border-solid border-2"
+                  {...register(`applicableItems.${index}`, {
+                    required: true,
+                    onChange: (e) => handleItemChange(index, e.target.value, 1),
+                  })}
                   value={item}
-                  onChange={(e) => {
-                    handleItemChange(index, e.target.value, 1);
-                  }}
-                  name="applicableItems"
-                  required
+                  name={`applicableItems[${index}]`}
                 />
 
                 <button type="button" onClick={() => removeItem(index, 1)}>
                   Remove
                 </button>
+                <div>
+                  {errors.applicableItems && errors.applicableItems[index] && (
+                    <p>{errors.applicableItems[index].message}</p>
+                  )}
+                </div>
               </div>
             ))}
+
             <button type="button" onClick={() => addItem(1)}>
               Add Item
             </button>
@@ -92,12 +122,20 @@ export function AddPromotionStep2({
           <div>
             <label>Discount Amount</label>
             <input
-              onChange={(e) => handleChange(e)}
               type="number"
+              {...register("discountAmount", {
+                onChange: (e) => {
+                  handleChange(e);
+                  // Update state
+                },
+              })}
               name="discountAmount"
               className={`border-solid border-2`}
               value={discountAmount}
             />
+            <div>
+              {errors.discountAmount && <p>{errors.discountAmount.message}</p>}
+            </div>
           </div>
         )}
       </div>
@@ -105,11 +143,17 @@ export function AddPromotionStep2({
         <label>Description:</label>
         <textarea
           type="text"
-          onChange={(e) => handleChange(e)}
           name="description"
+          {...register("description", {
+            onChange: (e) => {
+              handleChange(e);
+              // Update state
+            },
+          })}
           className={`border-solid border-2`}
           value={description}
         />
+        <div>{errors.description && <p>{errors.description.message}</p>}</div>
       </div>
       <div className="h-5"></div>
     </div>
